@@ -7,10 +7,18 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterData extends LoginCredentials {
-  name: string;
+export interface RegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
   companyName: string;
   companyDomain: string;
+  password: string;
+}
+
+// Frontend type with password confirmation
+export interface RegisterFormData extends RegisterData {
+  confirmPassword: string;
 }
 
 export interface AuthResponse {
@@ -18,7 +26,8 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     companyName: string;
     companyDomain: string;
   };
@@ -45,7 +54,7 @@ export const authService = {
    * Register a new user
    */
   async register(userData: RegisterData): Promise<AuthResponse> {
-    const response = await apiService.post<AuthResponse>('/auth/register', userData);
+    const response = await apiService.post<AuthResponse>('/sign-up', userData);
     
     if (response.token) {
       setToken(response.token);

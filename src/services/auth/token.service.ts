@@ -1,75 +1,78 @@
 import { jwtDecode } from 'jwt-decode';
 
-// Storage keys
-const TOKEN_KEY = 'auth_token';
+const TOKEN_KEY = 'auth-token';
 
 /**
- * Interface for the decoded JWT token
+ * Get the JWT token from cookies
  */
-export interface DecodedToken {
-  sub: string; // User ID
-  email: string;
-  exp: number; // Expiration timestamp
-  iat: number; // Issued at timestamp
+export function getToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return document.cookie
+      .split('; ')
+      .find((row) => row.startsWith(`${TOKEN_KEY}=`))
+      ?.split('=')[1] || null;
+  }
+  return null;
+}
+
+// Server-side token functionality removed temporarily
+
+/**
+ * Set the JWT token in cookie
+ */
+export function setToken(token: string): void {
+  if (typeof window !== 'undefined') {
+    document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax`;
+  }
 }
 
 /**
- * Sets the authentication token in localStorage
+ * Remove the JWT token from cookie
  */
-export const setToken = (token: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
-};
+export function removeToken(): void {
+  if (typeof window !== 'undefined') {
+    document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  }
+}
 
 /**
- * Gets the authentication token from localStorage
+ * Check if the token is valid
  */
-export const getToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-/**
- * Removes the authentication token from localStorage
- */
-export const removeToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
-};
-
-/**
- * Checks if the current token is valid (exists and not expired)
- */
-export const isTokenValid = (): boolean => {
-  const token = getToken();
+export function isTokenValid(token?: string): boolean {
+  const currentToken = token || getToken();
   
-  if (!token) {
+  if (!currentToken) {
     return false;
   }
   
   try {
-    const decoded = jwtDecode<DecodedToken>(token);
-    // Check if token is expired
-    return decoded.exp * 1000 > Date.now();
+    const decoded: any = jwtDecode(currentToken);
+    const currentTime = Date.now() / 1000;
+    
+    // Check if token has expired
+    return decoded.exp > currentTime;
   } catch (error) {
     return false;
   }
-};
+}
 
 /**
- * Get user information from the decoded token
+ * Extract user data from token
  */
-export const getUserFromToken = (): { id: string; email: string } | null => {
-  const token = getToken();
+export function getUserFromToken(token?: string): { id: string; email: string } | null {
+  const currentToken = token || getToken();
   
-  if (!token) {
+  if (!currentToken) {
     return null;
   }
   
   try {
-    const decoded = jwtDecode<DecodedToken>(token);
+    const decoded: any = jwtDecode(currentToken);
     return {
-      id: decoded.sub,
-      email: decoded.email
+      id: decoded.sub || decoded.id,
+      email: decoded.email,
     };
   } catch (error) {
     return null;
   }
-}; 
+} 

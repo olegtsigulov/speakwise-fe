@@ -1,6 +1,9 @@
+'use client';
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authService, LoginCredentials, RegisterData } from '../../../services/auth/auth.service';
-import { getUserFromToken, isTokenValid } from '../../../services/auth/token.service';
+import { useRouter } from 'next/navigation';
+import { authService, LoginCredentials, RegisterData } from '@/services/auth/auth.service';
+import { getUserFromToken, isTokenValid } from '@/services/auth/token.service';
 
 // Context type definition
 interface AuthContextType {
@@ -32,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Initialize auth state when the component mounts
   useEffect(() => {
@@ -58,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: response.user.email,
       });
       setIsAuthenticated(true);
+      router.push('/dashboard');
     } catch (err) {
       setError('Failed to login. Please check your credentials.');
       throw err;
@@ -77,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: response.user.email,
       });
       setIsAuthenticated(true);
+      router.push('/dashboard');
     } catch (err) {
       setError('Failed to register. Please try again.');
       throw err;
@@ -90,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
+    router.push('/login');
   };
 
   const contextValue: AuthContextType = {
